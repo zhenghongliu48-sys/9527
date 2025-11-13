@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>編輯標記</h2>
+<div id="map"></div>
+
+<form id="editForm" style="margin-top:12px;">
+  <div class="form-row">
+    <label>名稱</label>
+    <input name="name" id="name" type="text" required />
+  </div>
+  <div class="form-row">
+    <label>描述</label>
+    <textarea name="description" id="description" rows="3"></textarea>
+  </div>
+  <div class="form-row">
+    <label>緯度 (lat)</label>
+    <input name="lat" id="lat" type="text" required />
+  </div>
+  <div class="form-row">
+    <label>經度 (lng)</label>
+    <input name="lng" id="lng" type="text" required />
+  </div>
+
+  <button class="btn btn-primary" type="submit">儲存</button>
+  <a class="btn" href="{{ url_for('index') }}">回到列表</a>
+</form>
+
+<script>
+const markerId = {{ marker_id }};
+let map = L.map('map').setView([23.7,121], 7);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+let activeMarker = null;
+
+async function loadMarker() {
+  const res = await fetch(`/api/markers/${markerId}`);
+  if (!res.ok) {
+    alert("找不到標記");
+    location.href = "/";
+    return;
+  }
+  const m = await res.json();
+  document.getElementById('name').value = m.name;
+  document.getElementById('description').value = m.description || "";
+  document.getElementById('lat').value = m.lat;
+  document.getElementById('lng').value = m.lng;
+
+  map.setView([m.lat, m.lng], 14);
+  activeMarker = L.marker([m.lat, m.lng], {draggable:true}).addTo(map).bindPopup(m.name).openPopup();
+
+  activeMarker.on('dragend', function(e){
+    const p = e.target.getLatLng();
+    document.getElementById('lat').value = p.lat.toFixed(6);
+    document.getElementById('lng').value = p.lng.toFixed(6);
+  });
+}
+
+map.on('click', function(e){
+  const lat = e.latlng.lat.toFixed(6);
+  const lng = e.latlng.lng.toFixed(6);
+  document.getElementById('lat').value = lat;
+  document.getElementById('lng').value = lng;
+  if (activeMarker) map.removeLayer(activeMarker);
+  activeMarker = L.marker([lat, lng], {draggable:true}).addTo(map);
+  activeMarker.on('dragend', function(ev){
+    const p = ev.target.getLatLng();
+    document.getElementById('lat').value = p.lat.toFixed(6);
+    document.getElementById('lng').value = p.lng.toFixed(6);
+  });
+});
+
+document.getElementById('editForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const payload = {
+    name: document.getElementById('name').value,
+    description: document.getElementById('description').value,
+    lat: document.getElementById('lat').value,
+    lng: document.getElementById('lng').value
+  };
+  const res = await fetch(`/api/markers/${markerId}`, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (res.ok) {
+    alert("更新成功");
+    const obj = await res.json();
+    window.location.href = `/marker/${obj.id}`;
+  } else {
+    const err = await res.json();
+    alert("更新失敗: " + (err.error || JSON.stringify(err)));
+  }
+});
+
+loadMarker();
+</script>
+{% endblock %}

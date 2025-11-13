@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div id="map" style="height: 400px;"></div>
+
+<div style="margin-top: 12px;">
+  <button class="btn btn-primary" id="backBtn">回到標記列表</button>
+  <button class="btn btn-secondary" id="editBtn">編輯</button>
+  <button class="btn btn-danger" id="deleteBtn">刪除</button>
+</div>
+
+<script>
+// 讓 VS Code 正確辨識 Flask 模板變數
+const markerId = { marker_id , tojson , safe };
+
+// === 初始化地圖 ===
+const map = L.map('map').setView([23.7, 121], 7);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19
+}).addTo(map);
+
+// === 返回列表 ===
+document.getElementById("backBtn").addEventListener("click", () => {
+  window.location.href = "{{ url_for('index') }}";
+});
+
+// === 載入單一標記 ===
+async function load() {
+  const res = await fetch(`/api/markers/${markerId}`);
+  if (!res.ok) {
+    alert("找不到標記");
+    window.location.href = "/";
+    return;
+  }
+
+  const m = await res.json();
+  map.setView([m.lat, m.lng], 14);
+  L.marker([m.lat, m.lng])
+    .addTo(map)
+    .bindPopup(`<b>${m.name}</b><br>${m.description || ""}`)
+    .openPopup();
+
+  // === 編輯按鈕 ===
+  document.getElementById("editBtn").addEventListener("click", () => {
+    window.location.href = `/marker/${m.id}/edit`;
+  });
+
+  // === 刪除按鈕 ===
+  document.getElementById("deleteBtn").addEventListener("click", async () => {
+    if (!confirm("確定要刪除此標記？")) return;
+    const dres = await fetch(`/api/markers/${m.id}`, { method: "DELETE" });
+    if (dres.ok) {
+      alert("刪除成功");
+      window.location.href = "/";
+    } else {
+      alert("刪除失敗");
+    }
+  });
+}
+
+load();
+</script>
+
+{% endblock %}
