@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
-from models import db, Marker
+from .models import db, Marker
 import os
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, Marker, User
+from .models import db, Marker, User
 import os
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
