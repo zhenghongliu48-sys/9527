@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>新增標記</h2>
+
+<div id="map"></div>
+
+<form id="createForm" style="margin-top:12px;">
+  <div class="form-row">
+    <label>名稱</label>
+    <input name="name" id="name" type="text" required />
+  </div>
+  <div class="form-row">
+    <label>描述</label>
+    <textarea name="description" id="description" rows="3"></textarea>
+  </div>
+  <div class="form-row">
+    <label>緯度 (lat)</label>
+    <input name="lat" id="lat" type="text" required />
+  </div>
+  <div class="form-row">
+    <label>經度 (lng)</label>
+    <input name="lng" id="lng" type="text" required />
+  </div>
+
+  <button class="btn btn-primary" type="submit">儲存並建立</button>
+  <a class="btn" href="{{ url_for('index') }}">回到列表</a>
+</form>
+
+<script>
+let map = L.map('map').setView([23.7, 121], 7);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+let tempMarker = null;
+map.on('click', function(e) {
+  const lat = e.latlng.lat.toFixed(6);
+  const lng = e.latlng.lng.toFixed(6);
+  document.getElementById('lat').value = lat;
+  document.getElementById('lng').value = lng;
+  if (tempMarker) { map.removeLayer(tempMarker); }
+  tempMarker = L.marker([lat, lng]).addTo(map).bindPopup(`座標：${lat}, ${lng}`).openPopup();
+});
+
+document.getElementById("createForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  const payload = {
+    name: document.getElementById('name').value,
+    description: document.getElementById('description').value,
+    lat: document.getElementById('lat').value,
+    lng: document.getElementById('lng').value
+  };
+  const res = await fetch('/api/markers', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (res.status === 201) {
+    const obj = await res.json();
+    alert("建立成功");
+    window.location.href = `/marker/${obj.id}`;
+  } else {
+    const err = await res.json();
+    alert("錯誤: " + (err.error || JSON.stringify(err)));
+  }
+});
+</script>
+{% endblock %}
