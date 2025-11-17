@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center;">
+  <div>
+    <button id="createBtn" class="btn btn-primary">新增標記</button>
+  </div>
+  <div>
+    <label><input id="showMapCheckbox" type="checkbox" /> 在此頁顯示地圖</label>
+  </div>
+</div>
+
+<div id="mapContainer" style="margin-top:12px; display:none;">
+  <div id="map" style="height:400px;"></div>
+</div>
+
+<h2>標記列表</h2>
+<table id="markerTable">
+  <thead><tr><th>名稱</th><th>描述</th><th>座標</th><th>操作</th></tr></thead>
+  <tbody></tbody>
+</table>
+
+<script>
+// === 新增標記按鈕 ===
+document.getElementById("createBtn").addEventListener("click", () => {
+  window.location.href = "{{ url_for('create_page') }}";
+});
+
+// === 載入標記 ===
+async function fetchMarkers() {
+  const res = await fetch("/api/markers");
+  const data = await res.json();
+  const tbody = document.querySelector("#markerTable tbody");
+  tbody.innerHTML = "";
+  data.forEach(m => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${m.name}</td>
+      <td>${m.description || ""}</td>
+      <td>${m.lat.toFixed(6)}, ${m.lng.toFixed(6)}</td>
+      <td>
+        <a class="btn" href="/marker/${m.id}">檢視</a>
+        <a class="btn" href="/marker/${m.id}/edit">編輯</a>
+        <button class="btn" onclick="deleteMarker(${m.id})">刪除</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+  if (window.map && window.markersLayer) {
+    window.markersLayer.clearLayers();
+    data.forEach(m => {
+      L.marker([m.lat, m.lng]).addTo(window.markersLayer)
+        .bindPopup(`<b>${m.name}</b><br>${m.description || ""}`);
+    });
+  }
+}
+
+// === 刪除標記 ===
+async function deleteMarker(id) {
+  if (!confirm("確定要刪除此標記？")) return;
+  const res = await fetch(`/api/markers/${id}`, { method: "DELETE" });
+  if (res.ok) {
+    alert("刪除成功");
+    fetchMarkers();
+  } else {
+    alert("刪除失敗");
+  }
+}
+
+// === 顯示地圖 ===
+document.getElementById("showMapCheckbox").addEventListener("change", function(){
+  const show = this.checked;
+  const container = document.getElementById("mapContainer");
+  container.style.display = show ? "block" : "none";
+  if (show && !window.map) initMap();
+});
+
+function initMap() {
+  window.map = L.map('map').setView([23.7, 121], 7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(window.map);
+  window.markersLayer = L.layerGroup().addTo(window.map);
+  fetchMarkers();
+}
+
+fetchMarkers();
+</script>
+{% endblock %}
