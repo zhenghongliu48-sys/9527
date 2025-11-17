@@ -1,38 +1,12 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Flask Map App</title>
-
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <style>
-    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "Helvetica Neue", Arial; margin: 16px; }
-    #map { height: 480px; width: 100%; border: 1px solid #ccc; border-radius: 6px; }
-    .btn { padding: .5rem .8rem; border-radius:6px; border:1px solid #333; background:#fff; cursor:pointer; display:inline-block; margin:4px; }
-    .btn-primary { background:#1d72f3; color:#fff; border-color:#165fb3; }
-    .form-row { margin: .5rem 0; }
-    label { display:block; font-weight:600; margin-bottom:4px; }
-    input[type="text"], textarea { width:100%; padding:8px; box-sizing:border-box; }
-    table { width:100%; border-collapse:collapse; margin-top:12px; }
-    th,td { padding:8px; border-bottom:1px solid #eee; text-align:left; }
-  </style>
-</head>
-<body>
-  <h1><a href="{{ url_for('index') }}">標記管理</a></h1>
-  {% block content %}{% endblock %}
-
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-</body>
-</html>
-<!doctype html>
-<html lang="zh-Hant">
-<head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Flask Map</title>
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+
   <style>
     body { font-family: sans-serif; margin:16px; }
     #map { height:480px; width:100%; }
@@ -41,6 +15,7 @@
   </style>
 </head>
 <body>
+
   <header style="display:flex; justify-content:space-between; align-items:center;">
     <h1><a href="{{ url_for('index') }}">地圖標記系統</a></h1>
     <div>
@@ -53,17 +28,21 @@
       {% endif %}
     </div>
   </header>
+
   <hr>
+
   {% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul style="color:red;">
-      {% for m in messages %}
-        <li>{{ m }}</li>
-      {% endfor %}
-    </ul>
-  {% endif %}
+    {% if messages %}
+      <ul style="color:red;">
+        {% for m in messages %}
+          <li>{{ m }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
   {% endwith %}
+
   {% block content %}{% endblock %}
+
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </body>
 </html>
